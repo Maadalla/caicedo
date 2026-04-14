@@ -4,13 +4,7 @@ import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <p>
-        #Switch
+const networkConfig = `#Switch
 enable
 configure terminal
 vlan 10
@@ -70,7 +64,6 @@ ip address 192.168.20.2 255.255.255.0
 standby 20 ip 192.168.20.1
 standby 20 preempt
 
-
 #Switch 3560 B
 spanning-tree vlan 20 root primary
 spanning-tree vlan 10 root secondary
@@ -88,7 +81,6 @@ standby 20 ip 192.168.20.1
 standby 20 priority 110
 standby 20 preempt
 
-
 #Switch 3560 A
 enable
 configure terminal
@@ -99,7 +91,6 @@ no shutdown
 exit
 
 #Switch 3560 B
-
 enable
 configure terminal
 interface fa0/1
@@ -125,13 +116,11 @@ no shutdown
 exit
 
 #Switch 3560 A
-
 enable
 configure terminal
 ip route 0.0.0.0 0.0.0.0 192.168.2.1
 
 #Switch 3560 B
-
 enable
 configure terminal
 ip route 0.0.0.0 0.0.0.0 192.168.1.1
@@ -145,7 +134,6 @@ ip route 192.168.10.0 255.255.255.0 192.168.2.2
 ! Route vers le VLAN 20 via DS2
 ip route 192.168.20.0 255.255.255.0 192.168.1.2
 
-
 #Switch 3560 A
 enable
 configure terminal
@@ -157,7 +145,6 @@ interface vlan 10
 standby 10 track 1 decrement 20
 exit
 
-
 #Switch 3560 B
 enable
 configure terminal
@@ -165,18 +152,29 @@ track 2 interface fa0/1 line-protocol
 
 interface vlan 20
 standby 20 track 2 decrement 20
-exit
+exit`;
 
+function App() {
+  const [count, setCount] = useState(0)
 
-
-
-
-
-
-
-
-      </p>
-    </>
+  return (
+    <div style={{ padding: '20px' }}>
+      
+      <pre 
+        style={{
+           // Dark background like a terminal
+                     // Hacker green text
+          padding: '24px',
+          borderRadius: '8px',
+          overflowX: 'auto',          // Adds a scrollbar if the text gets too wide
+          fontFamily: 'normal',
+          textAlign: 'left',
+          fontSize: '15px'
+        }}
+      >
+        <code>{networkConfig}</code>
+      </pre>
+    </div>
   )
 }
 
