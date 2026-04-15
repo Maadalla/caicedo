@@ -4,353 +4,171 @@ import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import './App.css'
 
-const networkConfig = `#Switch
-enable
-configure terminal
-vlan 10
-vlan 20
-exit
-interface range gig0/1-2
-switchport mode trunk
+const networkConfig = `Commandes ICMP (Ping & Routage) :
 
-! Configuration du port pour PC0 (VLAN 10)
-interface fa0/1
-switchport mode access
-switchport access vlan 10
-exit
+ping <IP>
+Vérifie si la machine répond aux requêtes ICMP.
 
-! Configuration du port pour PC1 (VLAN 20)
-interface fa0/2
-switchport mode access
-switchport access vlan 20
-exit
+ping -f -l <taille> <IP> (Windows)
+ping -s <taille> -M do <IP> (Linux)
+Permet de trouver la taille maximale (MTU) d'un paquet avant fragmentation.
 
-! Configuration du port pour PC2 (VLAN 10)
-interface fa0/1
-switchport mode access
-switchport access vlan 10
-exit
+ping -i <valeur> <IP>
+Modifie le TTL (Time To Live).
 
-! Configuration du port pour PC3 (VLAN 20)
-interface fa0/2
-switchport mode access
-switchport access vlan 20
-exit
+tracert <domaine/IP> (Windows)
+traceroute <domaine/IP> (Linux)
+Affiche les routeurs traversés (hops).
 
-#Switch 3560
-enable
-configure terminal
-vlan 10
-vlan 20
-exit
-interface range gig0/1-2
-switchport trunk encapsulation dot1q
-switchport mode trunk
+Découverte DNS (dig) :
 
-#Switch 3560 A
-spanning-tree vlan 10 root primary
-spanning-tree vlan 20 root secondary
-ip routing
-! Configuration pour le VLAN 10 (DS1 sera Actif)
-interface vlan 10
-ip address 192.168.10.2 255.255.255.0
-standby 10 ip 192.168.10.1
-standby 10 priority 110
-standby 10 preempt
+dig <domaine>
+Renvoie l'adresse IP du domaine.
 
-! Configuration pour le VLAN 20 (DS1 sera Standby)
-interface vlan 20
-ip address 192.168.20.2 255.255.255.0
-standby 20 ip 192.168.20.1
-standby 20 preempt
+dig <domaine> NS
+Liste les serveurs DNS.
 
-#Switch 3560 B
-spanning-tree vlan 20 root primary
-spanning-tree vlan 10 root secondary
-ip routing
-! Configuration pour le VLAN 10 (DS2 sera Standby)
-interface vlan 10
-ip address 192.168.10.3 255.255.255.0
-standby 10 ip 192.168.10.1
-standby 10 preempt
+dig <domaine> MX
+Liste les serveurs mail.
 
-! Configuration pour le VLAN 20 (DS2 sera Actif)
-interface vlan 20
-ip address 192.168.20.3 255.255.255.0
-standby 20 ip 192.168.20.1
-standby 20 priority 110
-standby 20 preempt
+dig <domaine> CNAME
+Affiche les alias.
 
-#Switch 3560 A
-enable
-configure terminal
-interface fa0/1
-no switchport
-ip address 192.168.2.2 255.255.255.0
-no shutdown
-exit
+dig +trace <domaine>
+Affiche le chemin complet de résolution DNS.
 
-#Switch 3560 B
-enable
-configure terminal
-interface fa0/1
-no switchport
-ip address 192.168.1.2 255.255.255.0
-no shutdown
-exit
+dig -x <IP>
+Recherche inversée (IP → domaine).
 
-#Routeur 
-enable
-configure terminal
+Phase 2 : Scanning avec Nmap
 
-! Liaison vers DS1
-interface gig0/0
-ip address 192.168.2.1 255.255.255.0
-no shutdown
-exit
+nmap -sn <IP>
+Ping scan (machine active ou non).
 
-! Liaison vers DS2
-interface gig0/1
-ip address 192.168.1.1 255.255.255.0
-no shutdown
-exit
+nmap -Pn <IP>
+Ignore le ping (scan même si bloqué).
 
-#Switch 3560 A
-enable
-configure terminal
-ip route 0.0.0.0 0.0.0.0 192.168.2.1
+nmap -n <IP>
+Désactive la résolution DNS.
 
-#Switch 3560 B
-enable
-configure terminal
-ip route 0.0.0.0 0.0.0.0 192.168.1.1
+Types de scan :
 
-#Routeur 
-enable
-configure terminal
-! Route vers le VLAN 10 via DS1
-ip route 192.168.10.0 255.255.255.0 192.168.2.2
+nmap -sS <IP>
+Scan SYN (furtif).
 
-! Route vers le VLAN 20 via DS2
-ip route 192.168.20.0 255.255.255.0 192.168.1.2
+nmap -sT <IP>
+Scan TCP complet.
 
-#Switch 3560 A
-enable
-configure terminal
-! 1. Créer le module de surveillance sur l'interface Fa0/1
-track 1 interface fa0/1 line-protocol
+nmap -sU <IP>
+Scan UDP.
 
-! 2. Appliquer la surveillance au groupe HSRP du VLAN 10
-interface vlan 10
-standby 10 track 1 decrement 20
-exit
+nmap -sF <IP>
+Scan FIN.
 
-#Switch 3560 B
-enable
-configure terminal
-track 2 interface fa0/1 line-protocol
+nmap -sX <IP>
+Scan Xmas.
 
-interface vlan 20
-standby 20 track 2 decrement 20
-exit
+Ciblage :
 
+nmap -p 80 <IP>
+Scan un port spécifique.
 
------T3-T1
-	R1
-		enable
-		configure terminal
+nmap -p 22,80 <IP>
+Scan plusieurs ports.
 
-		interface g0/0
-		ip address 192.168.1.2 255.255.255.0
-		no shutdown
+nmap -p- <IP>
+Scan tous les ports.
 
-		standby 1 ip 192.168.1.1
-		standby 1 priority 110
-		standby 1 preempt
-	
-	R2
-		enable
-		configure terminal
+nmap -p U:53,T:25 <IP>
+Scan UDP et TCP combiné.
 
-		interface g0/0
-		ip address 192.168.1.3 255.255.255.0
-		no shutdown
+nmap -F <IP>
+Scan rapide (ports courants).
 
-		standby 1 ip 192.168.1.1
-		standby 1 preempt
-		
------T3-T2
-	Switch L3 -1
-		enable
-		configure terminal
+nmap -T4 <IP>
+Scan rapide.
 
-		vlan 10
-		exit
-		vlan 20
-		exit
-		
-		ip routing
-		
-		interface ge0/1
-				switchport trunk encapsulation dot1q
-				switchport mode trunk
-				
-			VLAN 10
-				interface vlan 10
-				ip address 192.168.10.2 255.255.255.0
-				no shutdown
-				
-				standby 10 ip 192.168.10.1
-				standby 10 priority 110
-				standby 10 preempt
-				exit
-				
-			VLAN 20
-				interface vlan 20
-				ip address 192.168.20.2 255.255.255.0
-				no shutdown
-				
-				standby 20 ip 192.168.20.1
-				standby 20 priority 110
-				standby 20 preempt
-				exit
-		
-	Switch L3 -1
-		enable
-		configure terminal
+nmap -T2 <IP>
+Scan lent.
 
-		vlan 10
-		exit
-		vlan 20
-		exit
-		
-		ip routing
-		
-		interface ge0/1
-				switchport trunk encapsulation dot1q
-				switchport mode trunk
-				
-			VLAN 10
-				interface vlan 10
-				ip address 192.168.10.3 255.255.255.0
-				no shutdown
-				
-				standby 10 ip 192.168.10.1
-				standby 10 preempt
-				exit
+Identification :
 
-			VLAN 20
-				interface vlan 20
-				ip address 192.168.20.3 255.255.255.0
-				no shutdown
-		
-				standby 20 ip 192.168.20.1
-				standby 20 preempt
-				exit
-				
-	Switch 
-		vlan 10
-		exit
-		vlan 20
-		exit
-		
-		interface range fa0/1-3
-		switchport mode access
-		switchport access vlan 10
+nmap -O <IP>
+Détecte le système d'exploitation.
 
-		interface range fa0/4-6
-		switchport mode access
-		switchport access vlan 20
-		
+nmap -sV <IP>
+Version des services.
 
------T3-T3
-	R1	
-		interface g0/0 
-		ip address 192.168.1.1 255.255.255.0
-		no shutdown
-		
-		interface g0/1
-		ip address 192.168.2.1 255.255.255.0
-		no shutdown
+nmap -A <IP>
+Scan complet (OS + version + scripts + traceroute).
 
-		ip route 192.168.10.0 255.255.255.0 192.168.1.2
-		ip route 192.168.20.0 255.255.255.0 192.168.2.2
+Phase 3 : Énumération
 
-	L3 -1
-		interface g0/2
-		 no switchport
-		 ip address 192.168.1.2 255.255.255.0
-		 no shutdown
-		 
-	L3 -2 
-		interface g0/2
-		 no switchport
-		 ip address 192.168.2.2 255.255.255.0
-		 no shutdown
-		 
-		 
------T3-T4
-	R1	
-		conf t
-		no ip route 192.168.10.0 255.255.255.0 192.168.1.2
-		no ip route 192.168.20.0 255.255.255.0 192.168.2.2
+nbtscan <plage_IP>
+Trouve les machines Windows.
 
-		router ospf 1
-		 router-id 1.1.1.1
+nbtstat -a <IP>
+Table NetBIOS distante.
 
-		network 192.168.1.0 0.0.0.255 area 0
-		network 192.168.2.0 0.0.0.255 area 0
+nbtstat -c
+Cache NetBIOS local.
 
-	L3-1
-		conf t
-		router ospf 1
-		 router-id 2.2.2.2
+net view \\<IP>
+Liste les partages.
 
-		network 192.168.10.0 0.0.0.255 area 0
-		network 192.168.20.0 0.0.0.255 area 0
-		network 192.168.1.0 0.0.0.255 area 0
+net use \\<IP>\<dossier>
+Connexion à un partage.
 
-	L3-2
-		conf t
-			router ospf 1
-			 router-id 3.3.3.3
+Enum4linux :
 
-		network 192.168.10.0 0.0.0.255 area 0
-		network 192.168.20.0 0.0.0.255 area 0
-		network 192.168.2.0 0.0.0.255 area 0
+enum4linux -a <IP>
+Énumération complète.
 
------T3-T5
-	R1	
-		wr
-		
-		interface g0/0
-		ip nat inside
-		exit
-		
-		interface g0/1
-		ip nat inside
-		exit
-		
-		interface se0/3/0
-		ip address 1.1.1.2 255.255.255.252
-		no shutdown
-		
-		ip nat outside
-		exit
-		
-		access-list 1 permit 192.168.10.0 0.0.0.255
-		access-list 1 permit 192.168.20.0 0.0.0.255
-		
-		ip nat inside source list 1 interface se0/3/0 overload
-	
-		ip route 0.0.0.0 0.0.0.0 1.1.1.1
-		
-		router ospf 1
-		default-information originate
-	R2
-		interface se0/3/0
-		ip address 1.1.1.1 255.255.255.252
-		no shutdown
+enum4linux -U <IP>
+Liste des utilisateurs.
+
+enum4linux -S <IP>
+Partages réseau.
+
+enum4linux -P <IP>
+Politique de mots de passe.
+
+SMB :
+
+smbclient //IP/dossier -N
+Connexion anonyme.
+
+SNMP :
+
+snmp-check <IP>
+Infos SNMP.
+
+Phase 4 : Exploitation (Metasploit)
+
+msfconsole
+Lance Metasploit.
+
+Dans msfconsole :
+
+search <faille>
+Cherche un exploit.
+
+use <module>
+Sélectionne un module.
+
+set RHOST <IP>
+Définit la cible.
+
+set LHOST <IP>
+Définit l'attaquant.
+
+run
+Lance l'exploit.
+
+Post-exploitation :
+
+hashdump
+Récupère les mots de passe (hash).
 		`;
 
 function App() {
