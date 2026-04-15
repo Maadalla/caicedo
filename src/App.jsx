@@ -152,7 +152,206 @@ track 2 interface fa0/1 line-protocol
 
 interface vlan 20
 standby 20 track 2 decrement 20
-exit`;
+exit
+
+
+-----T3-T1
+	R1
+		enable
+		configure terminal
+
+		interface g0/0
+		ip address 192.168.1.2 255.255.255.0
+		no shutdown
+
+		standby 1 ip 192.168.1.1
+		standby 1 priority 110
+		standby 1 preempt
+	
+	R2
+		enable
+		configure terminal
+
+		interface g0/0
+		ip address 192.168.1.3 255.255.255.0
+		no shutdown
+
+		standby 1 ip 192.168.1.1
+		standby 1 preempt
+		
+-----T3-T2
+	Switch L3 -1
+		enable
+		configure terminal
+
+		vlan 10
+		exit
+		vlan 20
+		exit
+		
+		ip routing
+		
+		interface ge0/1
+				switchport trunk encapsulation dot1q
+				switchport mode trunk
+				
+			VLAN 10
+				interface vlan 10
+				ip address 192.168.10.2 255.255.255.0
+				no shutdown
+				
+				standby 10 ip 192.168.10.1
+				standby 10 priority 110
+				standby 10 preempt
+				exit
+				
+			VLAN 20
+				interface vlan 20
+				ip address 192.168.20.2 255.255.255.0
+				no shutdown
+				
+				standby 20 ip 192.168.20.1
+				standby 20 priority 110
+				standby 20 preempt
+				exit
+		
+	Switch L3 -1
+		enable
+		configure terminal
+
+		vlan 10
+		exit
+		vlan 20
+		exit
+		
+		ip routing
+		
+		interface ge0/1
+				switchport trunk encapsulation dot1q
+				switchport mode trunk
+				
+			VLAN 10
+				interface vlan 10
+				ip address 192.168.10.3 255.255.255.0
+				no shutdown
+				
+				standby 10 ip 192.168.10.1
+				standby 10 preempt
+				exit
+
+			VLAN 20
+				interface vlan 20
+				ip address 192.168.20.3 255.255.255.0
+				no shutdown
+		
+				standby 20 ip 192.168.20.1
+				standby 20 preempt
+				exit
+				
+	Switch 
+		vlan 10
+		exit
+		vlan 20
+		exit
+		
+		interface range fa0/1-3
+		switchport mode access
+		switchport access vlan 10
+
+		interface range fa0/4-6
+		switchport mode access
+		switchport access vlan 20
+		
+
+-----T3-T3
+	R1	
+		interface g0/0 
+		ip address 192.168.1.1 255.255.255.0
+		no shutdown
+		
+		interface g0/1
+		ip address 192.168.2.1 255.255.255.0
+		no shutdown
+
+		ip route 192.168.10.0 255.255.255.0 192.168.1.2
+		ip route 192.168.20.0 255.255.255.0 192.168.2.2
+
+	L3 -1
+		interface g0/2
+		 no switchport
+		 ip address 192.168.1.2 255.255.255.0
+		 no shutdown
+		 
+	L3 -2 
+		interface g0/2
+		 no switchport
+		 ip address 192.168.2.2 255.255.255.0
+		 no shutdown
+		 
+		 
+-----T3-T4
+	R1	
+		conf t
+		no ip route 192.168.10.0 255.255.255.0 192.168.1.2
+		no ip route 192.168.20.0 255.255.255.0 192.168.2.2
+
+		router ospf 1
+		 router-id 1.1.1.1
+
+		network 192.168.1.0 0.0.0.255 area 0
+		network 192.168.2.0 0.0.0.255 area 0
+
+	L3-1
+		conf t
+		router ospf 1
+		 router-id 2.2.2.2
+
+		network 192.168.10.0 0.0.0.255 area 0
+		network 192.168.20.0 0.0.0.255 area 0
+		network 192.168.1.0 0.0.0.255 area 0
+
+	L3-2
+		conf t
+			router ospf 1
+			 router-id 3.3.3.3
+
+		network 192.168.10.0 0.0.0.255 area 0
+		network 192.168.20.0 0.0.0.255 area 0
+		network 192.168.2.0 0.0.0.255 area 0
+
+-----T3-T5
+	R1	
+		wr
+		
+		interface g0/0
+		ip nat inside
+		exit
+		
+		interface g0/1
+		ip nat inside
+		exit
+		
+		interface se0/3/0
+		ip address 1.1.1.2 255.255.255.252
+		no shutdown
+		
+		ip nat outside
+		exit
+		
+		access-list 1 permit 192.168.10.0 0.0.0.255
+		access-list 1 permit 192.168.20.0 0.0.0.255
+		
+		ip nat inside source list 1 interface se0/3/0 overload
+	
+		ip route 0.0.0.0 0.0.0.0 1.1.1.1
+		
+		router ospf 1
+		default-information originate
+	R2
+		interface se0/3/0
+		ip address 1.1.1.1 255.255.255.252
+		no shutdown
+		`;
 
 function App() {
   const [count, setCount] = useState(0)
