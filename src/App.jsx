@@ -1,585 +1,601 @@
 import React, { useState } from 'react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('TP1');
+  const [activeTab, setActiveTab] = useState('WAN_TP2');
 
-  // The configurations extracted from the provided sources
+  // Les configurations extraites de vos nouveaux fichiers WAN
   const files = {
-    exam: `S1 (2960-24TT) — Switch central
-	enable
-	conf t
+    WAN_TP2: `WAN
 
-	vlan 10
-	 name VLAN10
-	vlan 20
-	 name VLAN20
+----------------------------------Topologie 1
 
-	! EtherChannel vers S2 — LACP (Po2)
-	interface range fa0/1 - 2
-	 channel-group 2 mode active
-	interface port-channel 2
-	 switchport mode trunk
-
-	! EtherChannel vers S3 — PAgP (Po1)
-	interface range fa0/3 - 4
-	 channel-group 1 mode desirable
-	interface port-channel 1
-	 switchport mode trunk
-
-	! Trunk vers Router0
-	interface fa0/24
-	 switchport mode trunk
-
-	end
-
-S2 (2960-24TT) — Switch VLAN10
-	enable
-	conf t
-
-	vlan 10
-	 name VLAN10
-	vlan 20
-	 name VLAN20
-
-	! EtherChannel vers S1 — LACP (Po2)
-	interface range fa0/1 - 2
-	 channel-group 2 mode active
-	interface port-channel 2
-	 switchport mode trunk
-
-	! EtherChannel vers S3 — LACP (Po3)
-	interface range fa0/3 - 4
-	 channel-group 3 mode active
-	interface port-channel 3
-	 switchport mode trunk
-
-	! Ports access VLAN 10 (PC-B, AP1, Smartphone0)
-	interface range fa0/5 - 7
-	 switchport mode access
-	 switchport access vlan 10
-
-	end
-
-S3 (2960-24TT) — Switch VLAN20
-	enable
-	conf t
-
-	vlan 10
-	 name VLAN10
-	vlan 20
-	 name VLAN20
-
-	! EtherChannel vers S1 — PAgP (Po1)
-	interface range fa0/1 - 2
-	 channel-group 1 mode desirable
-	interface port-channel 1
-	 switchport mode trunk
-
-	! EtherChannel vers S2 — LACP (Po3)
-	interface range fa0/3 - 4
-	 channel-group 3 mode passive
-	interface port-channel 3
-	 switchport mode trunk
-
-	! Ports access VLAN 20 (PC0, AP2, Smartphone1)
-	interface range fa0/5 - 7
-	 switchport mode access
-	 switchport access vlan 20
-
-	end
-
-Router0 (2911) — Router-on-a-Stick
-	enable
-	conf t
-
-	interface g0/0
-	 no shutdown
-
-	interface g0/0.10
-	 encapsulation dot1Q 10
-	 ip address 192.168.10.1 255.255.255.0
-
-	interface g0/0.20
-	 encapsulation dot1Q 20
-	 ip address 192.168.20.1 255.255.255.0
-
-	end`,
-
-    TP7: `Configuration ROUTEUR R1
-	conf t
-
-	! Activer routage IPv6
-	ipv6 unicast-routing
-
-	! Interface vers Switch1 (LAN1)
-	interface g0/0
-	 ipv6 address 2001:DB8:ACAD:1::1/64
-	 ipv6 enable
-	 no shutdown
-
-	! Interface vers Switch2 (LAN2)
-	interface g0/1
-	 ipv6 address 2001:DB8:ACAD:2::1/64
-	 ipv6 enable
-	 no shutdown
-
-	! Interface vers Internet (WAN)
-	interface s0/0/0
-	 ipv6 address 2001:DB8:ACAD:3::2/64
-	 ipv6 enable
-	 no shutdown
-
-	end
-	write memory
-
-Configuration PC1 (LAN1 - .10)
-	Desktop → IP Configuration :
-	  IPv6 Address : 2001:DB8:ACAD:1::10
-	  Prefix       : 64
-	  Gateway      : 2001:DB8:ACAD:1::1
-
-Configuration PC2 (LAN1 - .11)
-	Desktop → IP Configuration :
-	  IPv6 Address : 2001:DB8:ACAD:1::11
-	  Prefix       : 64
-	  Gateway      : 2001:DB8:ACAD:1::1
-
-Configuration PC3 (LAN2 - Auto)
-	Desktop → IP Configuration :
-	  Sélectionne : Auto Config ✅
-	  Gateway     : 2001:DB8:ACAD:2::1
-
-Configuration PC4 (LAN2 - Auto)
-	Desktop → IP Configuration :
-	  Sélectionne : Auto Config ✅
-	  Gateway     : 2001:DB8:ACAD:2::1
-
-Configuration Switch1 (2960-24TT)
-	conf t
-
-	! Pas de VLANs nécessaires (réseau simple)
-	! Juste vérifier les ports
-
-	interface Gig0/1
-	 no shutdown
-
-	interface fa0/1
-	 no shutdown
-
-	interface fa0/20
-	 no shutdown
-
-	end
-	write memory
-
-Configuration Switch2 (2960-24TT)
-	conf t
-
-	interface Gig0/1
-	 no shutdown
-
-	interface fa0/1
-	 no shutdown
-
-	interface fa0/4
-	 no shutdown
-
-	end
-	write memory
-
-Vérification
+Étape 1 — Configuration de base R1 et R2
 	Sur R1 :
-	show ipv6 interface brief
-	show ipv6 route
-	Sur PC1 :
-	ipconfig
-	ping 2001:DB8:ACAD:1::11
-	ping 2001:DB8:ACAD:2::1
-	Sur PC3 (SLAAC) :
-	ipconfig
-	ping 2001:DB8:ACAD:1::1`,
-
-    TP5: `Étape 1 — Switch d'accès S1
-	ciscoenable
-	configure terminal
-	hostname S1
-
-	! Création des VLANs
-	vlan 10
-	 name VLAN10
-	vlan 20
-	 name VLAN20
-	exit
-
-	! Port PC0 → VLAN 10 (access)
-	interface fa0/1
-	 switchport mode access
-	 switchport access vlan 10
-	 no shutdown
-	exit
-
-	! Port PC1 → VLAN 20 (access)
-	interface fa0/24
-	 switchport mode access
-	 switchport access vlan 20
-	 no shutdown
-	exit
-
-	! Ports uplink vers D1 et D2 en trunk
-	interface range gig0/1 - 2
-	 switchport mode trunk
-	 switchport trunk native vlan 99
-	 no shutdown
-	exit
-
-Étape 2 — Switch d'accès S2
-	ciscoenable
-	configure terminal
-	hostname S2
-
-	! Création des VLANs
-	vlan 10
-	 name VLAN10
-	vlan 20
-	 name VLAN20
-	exit
-
-	! Port PC2 → VLAN 10 (access)
-	interface fa0/1
-	 switchport mode access
-	 switchport access vlan 10
-	 no shutdown
-	exit
-
-	! Port PC3 → VLAN 20 (access)
-	interface fa0/24
-	 switchport mode access
-	 switchport access vlan 20
-	 no shutdown
-	exit
-
-	! Ports uplink vers D1 et D2 en trunk
-	interface range gig0/1 - 2
-	 switchport mode trunk
-	 switchport trunk native vlan 99
-	 no shutdown
-	exit
-	
-Étape 3 — EtherChannel entre D1 et D2 (Fa0/22, Fa0/23, Fa0/24)
-	Sur D1 :
-		ciscoenable
+		enable
 		configure terminal
-		hostname D1
-
-		! VLANs
-		vlan 10
-		 name VLAN10
-		vlan 20
-		 name VLAN20
-		exit
-
-		! EtherChannel Po1 vers D2 — LACP
-		interface range fa0/22 - 24
-		 shutdown
-		 switchport mode trunk
-		 switchport trunk native vlan 99
-		 channel-group 1 mode active
+		hostname R1
+		interface serial 0/0/0
+		 ip address 1.1.1.1 255.255.255.252
 		 no shutdown
 		exit
-		
-	Sur D2 :
-		ciscoenable
+	Sur R2 :
+		enable
 		configure terminal
-		hostname D2
-
-		! VLANs
-		vlan 10
-		 name VLAN10
-		vlan 20
-		 name VLAN20
+		hostname R2
+		interface serial 0/0/0
+		 ip address 1.1.1.2 255.255.255.252
+		 no shutdown
 		exit
 
-		! EtherChannel Po1 vers D1 — LACP
-		interface range fa0/22 - 24
-		 shutdown
-		 switchport mode trunk
-		 switchport trunk native vlan 99
-		 channel-group 1 mode active
+Étape 2 — Tester la connectivité
+	R1# ping 1.1.1.2
+
+Étape 3 — Déterminer DCE et DTE
+	R1# show controllers serial 0/0/0
+
+Étape 4 — Changer le clock rate sur le DCE (R1)
+	R1(config)# interface serial 0/0/0
+	R1(config-if)# clock rate 2000000
+
+Étape 5 — Essayer clock rate sur DTE (R2)
+	R2(config)# interface serial 0/0/0
+	R2(config-if)# clock rate 2000000
+
+Étape 6 — Afficher le type d'encapsulation
+	R1# show interfaces serial 0/0/0
+	R2# show interfaces serial 0/0/0
+
+Étape 7 — Changer l'encapsulation en PPP sur R1 puis tester
+	R1(config)# interface serial 0/0/0
+	R1(config-if)# encapsulation ppp
+
+Pour rétablir la connectivité, configurer PPP sur R2 aussi :
+	R2(config)# interface serial 0/0/0
+	R2(config-if)# encapsulation ppp
+	R1# ping 1.1.1.2
+	
+	
+----------------------------------Topologie 2 
+
+Étape 1 — Configuration R1
+	enable
+	configure terminal
+	hostname R1
+	
+	! Interface LAN
+		interface GigabitEthernet0/0
+		 ip address 192.168.10.1 255.255.255.0
 		 no shutdown
 		exit
 		
-Étape 4 — Interfaces SVI (adresses IP des VLANs) sur D1 et D2
-	Sur D1 :
-		cisco! Activer le routage inter-VLAN
-		ip routing
-
-		! SVI VLAN 10
-		interface vlan 10
-		 ip address 192.168.10.2 255.255.255.0
-		 no shutdown
-		exit
-
-		! SVI VLAN 20
-		interface vlan 20
-		 ip address 192.168.20.2 255.255.255.0
+	! Interface série vers R3
+		interface serial 0/0/0
+		 ip address 10.1.1.1 255.255.255.252
+		 clock rate 2000000
+		 encapsulation ppp
+		 ppp authentication pap
+		 ppp pap sent-username R1 password cisco
 		 no shutdown
 		exit
 		
-	Sur D2 :
-		cisco! Activer le routage inter-VLAN
-		ip routing
+	! Route par défaut vers R3
+		ip route 0.0.0.0 0.0.0.0 10.1.1.2
 
-		! SVI VLAN 10
-		interface vlan 10
-		 ip address 192.168.10.3 255.255.255.0
-		 no shutdown
-		exit
-
-		! SVI VLAN 20
-		interface vlan 20
-		 ip address 192.168.20.3 255.255.255.0
+Étape 2 — Configuration R2
+	enable
+	configure terminal
+	hostname R2
+	
+	! Interface LAN
+		interface GigabitEthernet0/0
+		 ip address 192.168.30.1 255.255.255.0
 		 no shutdown
 		exit
 		
-Étape 5 — Configuration HSRP sur D1 et D2
-	Sur D1 (Active VLAN 10 / Standby VLAN 20) :
-		cisco! HSRP pour VLAN 10 — D1 est ACTIF (priorité haute)
-		interface vlan 10
-		 standby 10 ip 192.168.10.1
-		 standby 10 priority 110
-		 standby 10 preempt
-		exit
-
-		! HSRP pour VLAN 20 — D1 est STANDBY (priorité basse)
-		interface vlan 20
-		 standby 20 ip 192.168.20.1
-		 standby 20 priority 90
-		 standby 20 preempt
+	! Interface série vers R3
+		interface serial 0/0/1
+		 ip address 10.2.2.2 255.255.255.252
+		 encapsulation ppp
+		 ppp authentication pap
+		 ppp pap sent-username R2 password cisco
+		 no shutdown
 		exit
 		
-	Sur D2 (Active VLAN 20 / Standby VLAN 10) :
-		cisco! HSRP pour VLAN 10 — D2 est STANDBY (priorité basse)
-		interface vlan 10
-		 standby 10 ip 192.168.10.1
-		 standby 10 priority 90
-		 standby 10 preempt
+	! Route par défaut vers R3
+		ip route 0.0.0.0 0.0.0.0 10.2.2.1
+
+Étape 3 — Configuration R3 (routeur central)
+	enable
+	configure terminal
+	hostname R3
+	
+	! Liaison série vers R1 — PAP
+		interface serial 0/0/0
+		 ip address 10.1.1.2 255.255.255.252
+		 encapsulation ppp
+		 ppp authentication pap
+		 ppp pap sent-username R3 password cisco
+		 no shutdown
 		exit
+		
+	! Liaison série vers R2 — PAP
+		interface serial 0/0/1
+		 ip address 10.2.2.1 255.255.255.252
+		 clock rate 2000000
+		 encapsulation ppp
+		 ppp authentication pap
+		 ppp pap sent-username R3 password cisco
+		 no shutdown
+		exit
+		
+	! Liaison série vers ISP — CHAP
+		interface serial 0/1/0
+		 ip address 209.165.200.225 255.255.255.252
+		 encapsulation ppp
+		 ppp authentication chap
+		 no shutdown
+		exit
+		
+	! Comptes utilisateurs pour PAP et CHAP
+		username R1 password cisco
+		username R2 password cisco
+		username ISP password cisco
+		
+	! Routage EIGRP entre R1, R2, R3
+		router eigrp 1
+		 network 10.1.1.0 0.0.0.3
+		 network 10.2.2.0 0.0.0.3
+		 network 209.165.200.224 0.0.0.3
+		 no auto-summary
+		exit
+		
+	! Route vers Internet
+		ip route 0.0.0.0 0.0.0.0 209.165.200.226
 
-		! HSRP pour VLAN 20 — D2 est ACTIF (priorité haute)
-		interface vlan 20
-		 standby 20 ip 192.168.20.1
-		 standby 20 priority 110
-		 standby 20 preempt
-		exit`,
+Étape 4 — Configuration ISP
+	enable
+	configure terminal
+	hostname ISP
+	
+	! Liaison série vers R3 — CHAP
+		interface serial 0/1/0
+		 ip address 209.165.200.226 255.255.255.252
+		 clock rate 2000000
+		 encapsulation ppp
+		 ppp authentication chap
+		 no shutdown
+		exit
+	! Interface vers Web server
+		interface GigabitEthernet0/0
+		 ip address 209.165.200.1 255.255.255.0
+		 no shutdown
+		exit
+		
+		username R3 password cisco
+		ip route 0.0.0.0 0.0.0.0 209.165.200.225
 
-    TP6: `Configuration SWITCH ✅
-conf t
+Étape 5 — Configuration PC et Laptop
 
-! Création des VLANs
-vlan 10
- name VLAN10
-vlan 20
- name VLAN20
-vlan 99
- name MANAGEMENT
-exit
+Étape 6 — Vérification (questions 9, 10, 11)
+	! Q9 — Encapsulation par défaut (avant changement)
+	R1# show interfaces serial 0/0/0
+	! → Encapsulation HDLC
 
-! Port vers AP1 (access vlan 10)
-interface fa0/1
- switchport mode access
- switchport access vlan 10
- no shutdown
+	! Q10 — Vérifier PPP activé
+	R1# show interfaces serial 0/0/0
+	! → Encapsulation PPP, LCP Open
 
-! Port vers WLC1 (access vlan 99)
-interface fa0/2
- switchport mode access
- switchport access vlan 99
- no shutdown
+	! Q11 — Vérifier authentification PAP/CHAP
+	R3# show ppp all
+	R1# debug ppp authentication`,
 
-! Port vers PC_Admin (access vlan 99)
-interface fa0/3
- switchport mode access
- switchport access vlan 99
- no shutdown
+    WAN_TP3: `------------------------------topologie 1/2
 
-! Port vers PC2 (access vlan 20)
-interface fa0/4
- switchport mode access
- switchport access vlan 20
- no shutdown
+Étape 1 — Configuration du commutateur Frame Relay (cloude pt)
+	config -> serial0 -> DLCI 102 
+	config -> serial1 -> DLCI 201
+	frame-relay -> serial0 - serial1
 
-! Port vers Server0 DHCP_VLAN20 (access vlan 20)
-interface fa0/5
- switchport mode access
- switchport access vlan 20
- no shutdown
+Étape 2 — Configuration R1 (mappage dynamique)
+	enable
+	configure terminal
+	hostname R1
 
-! Port vers Server1 DHCP_VLAN10 (access vlan 10)
-interface fa0/6
- switchport mode access
- switchport access vlan 10
- no shutdown
+	interface serial 0/0/0
+	 ip address 10.1.1.1 255.255.255.0
+	 encapsulation frame-relay
+	 no frame-relay inverse-arp
+	 frame-relay map ip 10.1.1.2 102 broadcast
+	 no shutdown
+	exit
 
-! Port vers PC1 (access vlan 10)
-interface fa0/7
- switchport mode access
- switchport access vlan 10
- no shutdown
+Étape 3 — Configuration R2 (mappage dynamique)
+	enable
+	configure terminal
+	hostname R2
 
-! Port vers Routeur R1 (trunk)
-interface fa0/8
- switchport mode trunk
- switchport trunk allowed vlan 10,20,99
- no shutdown
+	interface serial 0/0/0
+	 ip address 10.1.1.2 255.255.255.0
+	 encapsulation frame-relay
+	 no frame-relay inverse-arp
+	 frame-relay map ip 10.1.1.1 201 broadcast
+	 no shutdown
+	exit
 
-! Port vers AP2 (access vlan 20)
-interface fa0/9
- switchport mode access
- switchport access vlan 20
- no shutdown
+Étape 4 — Configuration R3 (mappage dynamique)
+	enable
+	configure terminal
+	hostname R3
 
-end
-write memory
+	interface serial 0/0/0
+	 ip address 10.2.2.1 255.255.255.0
+	 encapsulation frame-relay
+	 frame-relay map ip 10.2.2.2 304 broadcast
+	 no shutdown
+	exit
 
-Configuration ROUTEUR ✅
-conf t
+Étape 5 — Configuration R4 (mappage dynamique)
+	enable
+	configure terminal
+	hostname R4
 
-interface g0/0
- no shutdown
-
-interface g0/0.10
- encapsulation dot1Q 10
- ip address 192.168.10.1 255.255.255.0
- ip helper-address 192.168.10.250
- no shutdown
-
-interface g0/0.20
- encapsulation dot1Q 20
- ip address 192.168.20.1 255.255.255.0
- ip helper-address 192.168.20.250
- no shutdown
-
-interface g0/0.99
- encapsulation dot1Q 99
- ip address 192.168.99.1 255.255.255.0
- no shutdown
-
-end
-write memory
-
-Configuration Serveur DHCP_VLAN10 (Server1) ✅
-IP statique : 192.168.10.250
-Mask        : 255.255.255.0
-Gateway     : 192.168.10.1
-DNS         : 8.8.8.8
-
-Pool DHCP :
-  Pool Name : VLAN10
-  Start IP  : 192.168.10.2
-  Mask      : 255.255.255.0
-  Gateway   : 192.168.10.1
-  DNS       : 8.8.8.8
-  Max Users : 248
-
-Configuration Serveur DHCP_VLAN20 (Server0) ✅
-IP statique : 192.168.20.250
-Mask        : 255.255.255.0
-Gateway     : 192.168.20.1
-DNS         : 8.8.8.8
-
-Pool DHCP :
-  Pool Name : VLAN20
-  Start IP  : 192.168.20.2
-  Mask      : 255.255.255.0
-  Gateway   : 192.168.20.1
-  DNS       : 8.8.8.8
-  Max Users : 248
-
-Configuration PC_Admin ✅
-IP      : 192.168.99.10
-Mask    : 255.255.255.0
-Gateway : 192.168.99.1
-
-Configuration WLC1 ✅
-Management Interface :
-  IP      : 192.168.99.254
-  Mask    : 255.255.255.0
-  Gateway : 192.168.99.1
-
-Configuration AP1 (Access Point3) ✅
-Port 0 : filaire vers Switch Fa0/1 (VLAN 10)
-Port 1 :
-  SSID       : VLAN10_WIFI
-  Auth       : WPA2-PSK
-  Password   : cisco123
-  Encryption : AES
-  Channel    : 6
-
-Configuration AP2 (Access Point4) ✅
-Port 0 : filaire vers Switch Fa0/9 (VLAN 20)
-Port 1 :
-  SSID       : VLAN20_WIFI
-  Auth       : WPA2-PSK
-  Password   : cisco123
-  Encryption : AES
-  Channel    : 6
-
-Configuration Clients ✅
-Laptop1, Smartphone0 :
-  SSID : VLAN10_WIFI
-  Auth : WPA2-PSK
-  PSK  : cisco123
-  IP   : DHCP → 192.168.10.x
-
-Laptop0, Smartphone1 :
-  SSID : VLAN20_WIFI
-  Auth : WPA2-PSK
-  PSK  : cisco123
-  IP   : DHCP → 192.168.20.x
-
-PC1  : DHCP → 192.168.10.x
-PC2  : DHCP → 192.168.20.x
-
-
-
-
--------------------------------------------T2
-Modifications à faire :
-1. Supprimer Server0 et Server1
-2. Configurer DHCP sur le Routeur R1 :
-	conf t
-
-	ip dhcp pool VLAN10
-	 network 192.168.10.0 255.255.255.0
-	 default-router 192.168.10.1
-	 dns-server 8.8.8.8
+	interface serial 0/0/0
+	 ip address 10.2.2.2 255.255.255.0
+	 encapsulation frame-relay
+	 frame-relay map ip 10.2.2.1 403 broadcast
+	 no shutdown
 	exit
 	
-	ip dhcp pool VLAN20
-	 network 192.168.20.0 255.255.255.0
-	 default-router 192.168.20.1
-	 dns-server 8.8.8.8
-	exit
-
-	ip dhcp pool VLAN99
-	 network 192.168.99.0 255.255.255.0
-	 default-router 192.168.99.1
-	 dns-server 8.8.8.8
-	exit
 	
-	! Exclure les IPs statiques
-	ip dhcp excluded-address 192.168.10.1
-	ip dhcp excluded-address 192.168.20.1
-	ip dhcp excluded-address 192.168.99.1
-	ip dhcp excluded-address 192.168.99.10
-	ip dhcp excluded-address 192.168.99.254
+------------------------------topologie 4
 
-	end
-	write memory`,
-    
+Cloud-PT Frame Relay
+
+From Port     Sublink    To Port       Sublink
+Serial0 (R1)  102        Serial2 (R3)  301
+Serial1 (R2)  203        Serial2 (R3)  302
+
+R1
+	enable
+	configure terminal
+	hostname R1
+
+	! LAN
+	interface GigabitEthernet0/0
+	 ip address 192.168.10.1 255.255.255.0
+	 no shutdown
+	exit
+
+	! Frame Relay vers R3 uniquement (hub)
+	interface serial 0/3/0
+	 ip address 10.1.1.1 255.255.255.0
+	 encapsulation frame-relay
+	 frame-relay map ip 10.1.1.3 102 broadcast    
+	 no shutdown
+	exit
+
+	! RIP
+	router rip
+	 version 2
+	 network 192.168.10.0
+	 network 10.0.0.0
+	 no auto-summary
+	exit
+
+R2
+	enable
+	configure terminal
+	hostname R2
+
+	! LAN
+	interface GigabitEthernet0/0
+	 ip address 192.168.30.1 255.255.255.0
+	 no shutdown
+	exit
+
+	! Frame Relay vers R3 uniquement (hub)
+	interface serial 0/3/0
+	 ip address 10.1.1.2 255.255.255.0
+	 encapsulation frame-relay
+	 frame-relay map ip 10.1.1.3 203 broadcast   
+	 no shutdown
+	exit
+
+	! RIP
+	router rip
+	 version 2
+	 network 192.168.30.0
+	 network 10.0.0.0
+	 no auto-summary
+	exit
+
+R3 (Hub)
+	enable
+	configure terminal
+	hostname R3
+
+	! Frame Relay vers R1 et R2
+	interface serial 0/3/1
+	 ip address 10.1.1.3 255.255.255.0
+	 encapsulation frame-relay
+	 frame-relay map ip 10.1.1.1 301 broadcast   
+	 frame-relay map ip 10.1.1.2 302 broadcast   
+	 no ip split-horizon                          
+	 no shutdown
+	exit
+
+	! Liaison vers ISP
+	interface serial 0/2/0
+	 ip address 209.165.200.225 255.255.255.224
+	 no shutdown
+	exit
+
+	! RIP
+	router rip
+	 version 2
+	 network 10.0.0.0
+	 network 209.165.200.0
+	 no auto-summary
+	 default-information originate                
+	exit
+
+	! Route par défaut vers Internet
+	ip route 0.0.0.0 0.0.0.0 209.165.200.226
+
+ISP (Cluster0)
+	enable
+	configure terminal
+	hostname ISP
+
+	interface serial 0/3/0
+	 ip address 209.165.200.226 255.255.255.224
+	 clock rate 64000
+	 no shutdown
+	exit
+
+	interface GigabitEthernet0/0
+	 ip address 209.165.200.1 255.255.255.252
+	 no shutdown
+	exit
+
+	ip route 0.0.0.0 0.0.0.0 209.165.200.225
+	
+	
+------------------------------topologie 5
+	
+Étape 1 — Cloud-PT Frame Relay
+From Port     Sublink    To Port       Sublink
+Serial0 (R1)  102        Serial2 (R3)  301
+Serial0 (R1)  103        Serial2 (R3)  302
+Serial1 (R2)  201        Serial2 (R3)  303
+Serial1 (R2)  203        Serial2 (R3)  304
+
+Étape 2 — Configuration R1
+	enable
+	configure terminal
+	hostname R1
+
+	! LAN
+	interface GigabitEthernet0/0
+	 ip address 192.168.10.1 255.255.255.0
+	 no shutdown
+	exit
+
+	! Interface physique — pas d'IP ici !
+	interface serial 0/3/0
+	 encapsulation frame-relay
+	 no shutdown
+	exit
+
+	! Sous-interface vers R3 — PVC1 (DLCI 102)
+	interface serial 0/3/0.1 point-to-point
+	 ip address 10.1.1.1 255.255.255.252
+	 frame-relay interface-dlci 102
+	exit
+
+	! Sous-interface vers R3 — PVC2 (DLCI 103)
+	interface serial 0/3/0.2 point-to-point
+	 ip address 10.1.3.2 255.255.255.252
+	 frame-relay interface-dlci 103
+	exit
+
+	! EIGRP
+	router eigrp 1
+	 network 192.168.10.0
+	 network 10.1.1.0 0.0.0.3
+	 network 10.1.3.0 0.0.0.3
+	 no auto-summary
+	exit
+
+Étape 3 — Configuration R2
+	enable
+	configure terminal
+	hostname R2
+
+	! LAN
+	interface GigabitEthernet0/0
+	 ip address 192.168.30.1 255.255.255.0
+	 no shutdown
+	exit
+
+	! Interface physique — pas d'IP ici !
+	interface serial 0/3/0
+	 encapsulation frame-relay
+	 no shutdown
+	exit
+
+	! Sous-interface vers R3 — PVC3 (DLCI 201)
+	interface serial 0/3/0.1 point-to-point
+	 ip address 10.1.1.2 255.255.255.252
+	 frame-relay interface-dlci 201
+	exit
+
+	! Sous-interface vers R3 — PVC4 (DLCI 203)
+	interface serial 0/3/0.3 point-to-point
+	 ip address 10.1.2.1 255.255.255.252
+	 frame-relay interface-dlci 203
+	exit
+
+	! EIGRP
+	router eigrp 1
+	 network 192.168.30.0
+	 network 10.1.1.0 0.0.0.3
+	 network 10.1.2.0 0.0.0.3
+	 no auto-summary
+	exit
+
+Étape 4 — Configuration R3 (Hub)
+	enable
+	configure terminal
+	hostname R3
+
+	! Interface physique — pas d'IP ici !
+	interface serial 0/3/0
+	 encapsulation frame-relay
+	 no shutdown
+	exit
+
+	! Sous-interface vers R1 PVC1 (DLCI 301)
+	interface serial 0/3/0.1 point-to-point
+	 ip address 10.1.1.2 255.255.255.252
+	 frame-relay interface-dlci 301
+	exit
+
+	! Sous-interface vers R1 PVC2 (DLCI 302)
+	interface serial 0/3/0.2 point-to-point
+	 ip address 10.1.3.1 255.255.255.252
+	 frame-relay interface-dlci 302
+	exit
+
+	! Sous-interface vers R2 PVC3 (DLCI 303)
+	interface serial 0/3/0.3 point-to-point
+	 ip address 10.1.1.2 255.255.255.252
+	 frame-relay interface-dlci 303
+	exit
+
+	! Sous-interface vers R2 PVC4 (DLCI 304)
+	interface serial 0/3/0.4 point-to-point
+	 ip address 10.1.2.2 255.255.255.252
+	 frame-relay interface-dlci 304
+	exit
+
+	! Liaison vers ISP
+	interface serial 0/2/0
+	 ip address 209.165.200.225 255.255.255.224
+	 no shutdown
+	exit
+
+	! EIGRP
+	router eigrp 1
+	 network 10.1.1.0 0.0.0.3
+	 network 10.1.3.0 0.0.0.3
+	 network 10.1.2.0 0.0.0.3
+	 network 209.165.200.0 0.0.0.31
+	 no auto-summary
+	exit
+
+	! Route par défaut vers Internet
+	ip route 0.0.0.0 0.0.0.0 209.165.200.226
+
+Étape 5 — Configuration ISP
+	enable
+	configure terminal
+	hostname ISP
+
+	interface serial 0/3/0
+	 ip address 209.165.200.226 255.255.255.224
+	 clock rate 64000
+	 no shutdown
+	exit
+
+	interface GigabitEthernet0/0
+	 ip address 209.165.200.1 255.255.255.252
+	 no shutdown
+	exit
+
+	ip route 0.0.0.0 0.0.0.0 209.165.200.225`,
+
+    WAN_TP4: `--------------------Topologie 1 
+
+Étape 1 — Configurer Server_FAI
+	Champ Valeur IP 1.1.1.1
+	Masque 255.255.255.0
+
+	Activer aussi le service DHCP sur Server_FAI pour distribuer les IPs aux clients câble :
+
+	Dans Services → DHCP :
+	Pool Name    : CablePool
+	Default GW   : 1.1.1.1
+	DNS Server   : 1.1.1.1
+	Start IP     : 1.1.1.10
+	Subnet Mask  : 255.255.255.0
+	Max Users    : 50
+
+Étape 2 — Configurer le Cloud FAI
+
+	⚠️ Utiliser la section DSL (pas Cable) avec des DSL Modems !
+	Dans Config → DSL :
+	From Port	To Port
+	Modem4		Ethernet6
+	Modem5		Ethernet6
+
+	Connexions physiques :
+	Câble			De				Vers
+	Phone (tirets)	Cloud Modem4	DSL Modem1 Port0
+	Phone (tirets)	Cloud Modem5	DSL Modem2 Port0
+	Ethernet droit	Cloud Ethernet6	Switch0 Fa0/2
+
+Étape 3 — Configurer DSL Modem1 (vers PC0)
+	Connexions physiques :
+	Câble				De					Vers
+	Phone				DSL Modem1 Port0	Cloud Modem4
+	Ethernet droit		DSL Modem1 Port1	PC0 Fa0
+
+	PC0 configuré en DHCP → obtient IP automatiquement
+
+
+Étape 4 — Configurer DSL Modem2 + Wireless Router
+	Connexions physiques :
+
+	Câble			De					Vers
+	Phone			DSL Modem2 Port0	Cloud Modem5
+	Ethernet droit	DSL Modem2 Port1	WirelessRouter 0/0
+
+	Configuration Wireless Router — GUI :
+	Onglet Internet Setup (WAN) :
+	Champ						Valeur
+	Internet Connection Type	Automatic Configuration - DHCP
+
+	✅ Le routeur obtient son IP automatiquement via DSL Modem2
+
+	Onglet Network Setup (LAN) :
+	Champ			Valeur
+	Router IP		192.168.1.1
+	Subnet Mask		255.255.255.0
+	DHCP Server		Enabled
+	Start IP		192.168.1.100
+	Max Users		50
+	➡️ Cliquer Save Settings
+
+	Onglet Wireless :
+	Champ				Valeur
+	SSID 				HomeWifi
+	Channel6			SecurityWPA2 
+	PersonalPassword	cisco123
+	➡️ Cliquer Save Settings
+
+Étape 5 — Connecter Laptop0 au WiFi
+	Sur Laptop0 :
+
+	Aller dans Config → Wireless0
+	SSID : HomeWifi
+	Password : cisco123
+	IP : DHCP
+
+--------------------Topologie 2`
   };
 
-  // Inline styling
+  // Les styles de l'interface graphique
   const styles = {
     appContainer: {
       fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -629,7 +645,7 @@ Modifications à faire :
 
   return (
     <div style={styles.appContainer}>
-      {/* Top Menu Bar */}
+      {/* Barre de navigation (les boutons) */}
       <div style={styles.navBar}>
         {Object.keys(files).map((tabName) => (
           <button
@@ -645,7 +661,7 @@ Modifications à faire :
         ))}
       </div>
 
-      {/* Code Display Area */}
+      {/* Affichage du code correspondant au bouton */}
       <div style={styles.codeContainer}>
         <pre style={styles.pre}>
           <code>{files[activeTab]}</code>
